@@ -9,7 +9,8 @@ license = "Apache 2.0"
 python = "<3.9,>=3.7"
 requests = "^2.25.1"
 singer-sdk = "^0.3.8"
-psycopg2 = "^2.9.1"
+boto3 = "^1.18.62"
+snowflake-connector-python = "^2.6.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1.2"
