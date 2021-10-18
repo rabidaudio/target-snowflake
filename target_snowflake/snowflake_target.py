@@ -5,9 +5,10 @@ import snowflake.connector
 from target_snowflake.sinks import SnowflakeSink
 from singer_sdk import Target
 
+
 class SnowflakeTarget(Target):
 
-    name = 'SnowflakeTarget'
+    name = "SnowflakeTarget"
     default_sink_class = SnowflakeSink
 
     def __init__(
@@ -35,7 +36,7 @@ class SnowflakeTarget(Target):
                 is_transaction = True
             else:
                 sql = [sql]
-            for i, query in enumerate(sql):
+            for query in sql:
                 self.logger.debug(query)
                 cur.execute(query, kwargs)
                 result = cur.fetchall()

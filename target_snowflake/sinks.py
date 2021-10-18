@@ -4,6 +4,7 @@ from target_snowflake.database_target.csv_sink import CSVSink
 from target_snowflake.database_target.schema_migrator import SchemaMigrator
 from target_snowflake.snowflake_migrator import SnowflakeSchemaMigrator
 
+
 class SnowflakeSink(CSVSink):
     # def __init__(
     #     self,
@@ -17,10 +18,7 @@ class SnowflakeSink(CSVSink):
     def migrator(self) -> SchemaMigrator:
         if not self._migrator:
             self._migrator = SnowflakeSchemaMigrator(
-                self.target,
-                self.stream_name,
-                self.schema,
-                self.key_properties
+                self.target, self.stream_name, self.schema, self.key_properties
             )
         return self._migrator
 
@@ -33,6 +31,7 @@ class SnowflakeSink(CSVSink):
         # copy the file to the stage
         # load the file from the stage into the database
         # (optional) archive the file
+
 
 # class SnowflakeSink(BatchSink):
 #     """Snowflake target sink class."""

@@ -1,44 +1,9 @@
-import os
-import pytest
-
 from freezegun import freeze_time
-import snowflake.connector
 from snowflake.connector import SnowflakeConnection
 
 from target_snowflake.snowflake_target import SnowflakeTarget
 from target_snowflake.snowflake_migrator import SnowflakeSchemaMigrator
 
-
-@pytest.fixture
-def db_config() -> dict:
-    try:
-        return {
-            "account": os.environ["TEST_DATABASE_ACCOUNT"],
-            "user": os.getenv("TEST_DATABASE_USER"),
-            "password": os.getenv("TEST_DATABASE_PASSWORD"),
-            "database": os.getenv("TEST_DATABASE_DBNAME", "test-target-snowflake"),
-            "role": os.getenv("TEST_DATABASE_ROLE"),
-            "warehouse": os.getenv("TEST_DATABASE_WAREHOUSE"),
-        }
-    except KeyError as e:
-        raise Exception(
-            "Set TEST_DATABASE_* environment variables in order to run the test suite"
-        ) from e
-
-
-@pytest.fixture
-def db_connection(db_config: dict) -> SnowflakeConnection:
-    conn = snowflake.connector.connect(**db_config)
-    conn.cursor().execute("CREATE SCHEMA IF NOT EXISTS TEST_SCHEMA")
-    yield conn
-    conn.cursor().execute("DROP SCHEMA TEST_SCHEMA CASCADE")
-
-
-@pytest.fixture
-def snowflake_target(
-    db_config: dict, db_connection: SnowflakeConnection
-) -> SnowflakeTarget:
-    yield SnowflakeTarget(config={"snowflake": db_config, "schema": "TEST_SCHEMA"})
 
 def test_create_table(
     db_connection: SnowflakeConnection, snowflake_target: SnowflakeTarget
@@ -190,14 +155,14 @@ def test_data_types(
     )
     column_defs = migrator.sync_table()
 
-    assert column_defs['OPTIONAL_STRING'] == 'TEXT'  # NOTE: NO 'NOT NULL'
-    assert column_defs['STRING'] == 'TEXT'
-    assert column_defs['BOOLEAN'] == 'BOOLEAN'
-    assert column_defs['INTEGER'] == 'NUMBER'
-    assert column_defs['DECIMAL'] == 'FLOAT'
-    assert column_defs['DATE'] == 'DATE'
-    assert column_defs['DATETIME'] == 'TIMESTAMP_TZ'
-    assert column_defs['PRIMITIVE_ARRAY'] == 'ARRAY'
-    assert column_defs['NESTED_OBJECT'] == 'VARIANT'
-    assert column_defs['OBJECT_ARRAY'] == 'ARRAY'
-    assert column_defs['UNCERTAIN_TYPE'] == 'TEXT'
+    assert column_defs["OPTIONAL_STRING"] == "TEXT"  # NOTE: NO 'NOT NULL'
+    assert column_defs["STRING"] == "TEXT"
+    assert column_defs["BOOLEAN"] == "BOOLEAN"
+    assert column_defs["INTEGER"] == "NUMBER"
+    assert column_defs["DECIMAL"] == "FLOAT"
+    assert column_defs["DATE"] == "DATE"
+    assert column_defs["DATETIME"] == "TIMESTAMP_TZ"
+    assert column_defs["PRIMITIVE_ARRAY"] == "ARRAY"
+    assert column_defs["NESTED_OBJECT"] == "VARIANT"
+    assert column_defs["OBJECT_ARRAY"] == "ARRAY"
+    assert column_defs["UNCERTAIN_TYPE"] == "TEXT"

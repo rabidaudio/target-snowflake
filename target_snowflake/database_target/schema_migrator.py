@@ -29,7 +29,9 @@ def convert_jsonschema_types_to_lists(jsonschema: dict) -> dict:
         }
     return new_schema
 
+
 ColumnType = str
+
 
 class SchemaMigrator(metaclass=abc.ABCMeta):
     def __init__(
@@ -41,7 +43,7 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
     ) -> None:
         """
         Initialize the schema migrator.
-        
+
         Args:
             target: Target instance.
             stream_name: Name of the stream to sink.
@@ -67,7 +69,9 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
                 f"Creating table '{self.table_name}' for stream "
                 f"'{self.stream_name}' with key properties: {self.key_properties}"
             )
-            self.create_table(self.table_name, self.key_properties, self.column_definitions)
+            self.create_table(
+                self.table_name, self.key_properties, self.column_definitions
+            )
             return self.column_definitions
 
         for column_name, type in self.column_definitions.items():
@@ -108,7 +112,9 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
             self._table_name = self.convert_stream_name_to_table_name(self.stream_name)
         return self._table_name
 
-    def on_column_conflict(self, column_name: str, old_type: ColumnType, new_type: ColumnType):
+    def on_column_conflict(
+        self, column_name: str, old_type: ColumnType, new_type: ColumnType
+    ):
         """
         Handle a change in data type for a column.
 
@@ -118,7 +124,7 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
         if self.raise_on_column_conflicts:
             raise Exception(
                 f"Column '{column_name}' on table '{self.table_name}' changed from ",
-                f"{old_type} to {new_type}."
+                f"{old_type} to {new_type}.",
             )
 
         new_column_name = self.version_column_name(column_name)
@@ -133,8 +139,8 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
 
     @property
     def raise_on_column_conflicts(self) -> bool:
-      """Set to `True` to disable default versioning behavior on column conflicts."""
-      return self.config.get('raise_on_column_conflicts', False)
+        """Set to `True` to disable default versioning behavior on column conflicts."""
+        return self.config.get("raise_on_column_conflicts", False)
 
     def create_column_definitions(self, schema: dict) -> Dict[str, ColumnType]:
         """
@@ -142,7 +148,9 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
         SQL data types.
         """
         return {
-            self.convert_property_name_to_column_name(name): self.convert_jsonschema_to_sql_type(definition)
+            self.convert_property_name_to_column_name(
+                name
+            ): self.convert_jsonschema_to_sql_type(definition)
             for name, definition in schema["properties"].items()
         }
 
@@ -172,7 +180,7 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
     def get_table(self, table_name: str) -> Optional[Dict[str, ColumnType]]:
         """
         Check if a table already exists for `table_name`.
-        
+
         If it does, return a map of existing column names to their SQL data types.
         If it does not exist, return None.
 
@@ -182,11 +190,14 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def create_table(
-        self, table_name: str, key_properties: List[str], column_definitions: Dict[str, ColumnType]
+        self,
+        table_name: str,
+        key_properties: List[str],
+        column_definitions: Dict[str, ColumnType],
     ) -> None:
         """
         Create a table with the given name, columns, and key properties.
-        
+
         This method must be overridden.
         """
         pass
@@ -195,7 +206,7 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
     def add_column(self, table_name: str, column_name: str, type: ColumnType) -> None:
         """
         Add a column to an existing table.
-        
+
         This method must be overridden.
         """
         pass
@@ -204,7 +215,7 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
     def rename_column(self, table_name: str, old_name: str, new_name: str) -> None:
         """
         Rename an existing column on the table.
-        
+
         This method must be overridden if the default versioning behavior is used.
         """
         pass

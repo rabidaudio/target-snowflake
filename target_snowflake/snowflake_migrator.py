@@ -1,21 +1,21 @@
-from typing import Any, Dict, Optional, List
+from typing import Dict, Optional, List
 
 from target_snowflake.database_target.schema_migrator import SchemaMigrator, ColumnType
 
 
 class SnowflakeSchemaMigrator(SchemaMigrator):
-
     @property
     def table_schema(self):
         return self.target.table_schema
-    
+
     def get_table(self, table_name: str) -> Optional[Dict[str, ColumnType]]:
-        res = self.target.query([
-            'SHOW COLUMNS IN SCHEMA "{}"."{}";'.format(
-                self.config['snowflake']['database'],
-                self.table_schema,
-            ),
-            """
+        res = self.target.query(
+            [
+                'SHOW COLUMNS IN SCHEMA "{}"."{}";'.format(
+                    self.config["snowflake"]["database"],
+                    self.table_schema,
+                ),
+                """
             SELECT "column_name" AS column_name,
                     CASE PARSE_JSON("data_type"):type::varchar
                         WHEN 'FIXED' THEN 'NUMBER'
@@ -25,13 +25,18 @@ class SnowflakeSchemaMigrator(SchemaMigrator):
             FROM TABLE(RESULT_SCAN(LAST_QUERY_ID()))
             WHERE "table_name" = %(table_name)s;
             """,
-        ], table_name=table_name)
+            ],
+            table_name=table_name,
+        )
         if not res:
             return None
         return {column["COLUMN_NAME"]: column["DATA_TYPE"] for column in res}
 
     def create_table(
-        self, table_name: str, key_properties: List[str], column_definitions: Dict[str, ColumnType]
+        self,
+        table_name: str,
+        key_properties: List[str],
+        column_definitions: Dict[str, ColumnType],
     ) -> None:
         sql = 'CREATE TABLE "{}"."{}" ('.format(self.table_schema, table_name)
         columns = []
@@ -68,32 +73,32 @@ class SnowflakeSchemaMigrator(SchemaMigrator):
             )
         )
 
-    def convert_jsonschema_to_sql_type(self,  property_schema: dict) -> str:
+    def convert_jsonschema_to_sql_type(self, property_schema: dict) -> str:
         # https://docs.snowflake.com/en/sql-reference/intro-summary-data-types.html
         # Note: ignores "null" types and assumes all types are nullable
-        if 'array' in property_schema['type']:
-            return 'ARRAY'
-        if 'object' in property_schema['type']:
-            return 'VARIANT'
+        if "array" in property_schema["type"]:
+            return "ARRAY"
+        if "object" in property_schema["type"]:
+            return "VARIANT"
         if (
-            'format' in property_schema
-            and property_schema['format'] == 'date-time'
-            and 'string' in property_schema['type']
+            "format" in property_schema
+            and property_schema["format"] == "date-time"
+            and "string" in property_schema["type"]
         ):
-            return 'TIMESTAMP_TZ'
+            return "TIMESTAMP_TZ"
         if (
-            'format' in property_schema
-            and property_schema['format'] == 'date'
-            and 'string' in property_schema['type']
+            "format" in property_schema
+            and property_schema["format"] == "date"
+            and "string" in property_schema["type"]
         ):
-            return 'DATE'
-        if 'string' in property_schema['type']:
-            return 'TEXT' # equivalent to VARCHAR(16777216)
-        if 'number' in property_schema['type']:
-            return 'FLOAT' # equivalent to REAL, arbitrary precision
-        if 'integer' in property_schema['type']:
-            return 'NUMBER' # defaults to NUMBER(38, 0), equivalent to BIGINT
-        if 'boolean' in property_schema['type']:
-            return 'BOOLEAN'
+            return "DATE"
+        if "string" in property_schema["type"]:
+            return "TEXT"  # equivalent to VARCHAR(16777216)
+        if "number" in property_schema["type"]:
+            return "FLOAT"  # equivalent to REAL, arbitrary precision
+        if "integer" in property_schema["type"]:
+            return "NUMBER"  # defaults to NUMBER(38, 0), equivalent to BIGINT
+        if "boolean" in property_schema["type"]:
+            return "BOOLEAN"
 
-        return 'TEXT'
+        return "TEXT"
