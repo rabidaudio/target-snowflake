@@ -1,3 +1,5 @@
+"""Database table creator and migrator."""
+
 from typing import Dict, Optional, List
 
 from target_snowflake.database_target.schema_migrator import SchemaMigrator, ColumnType
@@ -6,10 +8,14 @@ from target_snowflake.database_target.schema_migrator import SchemaMigrator, Col
 class SnowflakeSchemaMigrator(SchemaMigrator):
     @property
     def table_schema(self):
-        return self.target.table_schema
+        return self.sink.table_schema
+
+    @property
+    def connection(self):
+        return self.sink.connection
 
     def get_table(self, table_name: str) -> Optional[Dict[str, ColumnType]]:
-        res = self.target.query(
+        res = self.connection.query(
             [
                 'SHOW COLUMNS IN SCHEMA "{}"."{}";'.format(
                     self.config["snowflake"]["database"],
@@ -48,7 +54,7 @@ class SnowflakeSchemaMigrator(SchemaMigrator):
         sql += ", ".join(columns)
         sql += ")"
 
-        self.target.execute(sql)
+        self.connection.execute(sql)
 
     def convert_stream_name_to_table_name(self, stream_name: str) -> str:
         return stream_name.upper()
@@ -57,14 +63,14 @@ class SnowflakeSchemaMigrator(SchemaMigrator):
         return column_name.upper()
 
     def add_column(self, table_name: str, column_name: str, type: ColumnType) -> None:
-        self.target.execute(
+        self.connection.execute(
             'ALTER TABLE "{}"."{}" ADD COLUMN "{}" {}'.format(
                 self.table_schema, table_name, column_name, type
             )
         )
 
     def rename_column(self, table_name: str, old_name: str, new_name: str) -> None:
-        self.target.execute(
+        self.connection.execute(
             'ALTER TABLE "{}"."{}" RENAME COLUMN "{}" to "{}"'.format(
                 self.table_schema,
                 table_name,

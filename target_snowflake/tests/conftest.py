@@ -1,10 +1,8 @@
+import logging
 import os
 import pytest
 
-import snowflake.connector
-from snowflake.connector import SnowflakeConnection
-
-from target_snowflake.snowflake_target import SnowflakeTarget
+from target_snowflake.target import SnowflakeTarget, Connection
 
 
 @pytest.fixture
@@ -25,15 +23,16 @@ def db_config() -> dict:
 
 
 @pytest.fixture
-def db_connection(db_config: dict) -> SnowflakeConnection:
-    conn = snowflake.connector.connect(**db_config)
-    conn.cursor().execute("CREATE SCHEMA IF NOT EXISTS TEST_SCHEMA")
-    yield conn
-    conn.cursor().execute("DROP SCHEMA TEST_SCHEMA CASCADE")
+def db_connection(db_config: dict) -> Connection:
+    conn = Connection(logger=logging.getLogger(), **db_config)
+    try:
+        conn.execute("CREATE SCHEMA IF NOT EXISTS TEST_SCHEMA")
+        yield conn
+    finally:
+        conn.execute("DROP SCHEMA TEST_SCHEMA CASCADE")
+        conn.close()
 
 
 @pytest.fixture
-def snowflake_target(
-    db_config: dict, db_connection: SnowflakeConnection
-) -> SnowflakeTarget:
-    yield SnowflakeTarget(config={"snowflake": db_config, "schema": "TEST_SCHEMA"})
+def snowflake_target(db_config: dict, db_connection: Connection) -> SnowflakeTarget:
+    yield SnowflakeTarget(config={"snowflake": {"schema": "TEST_SCHEMA", **db_config}})

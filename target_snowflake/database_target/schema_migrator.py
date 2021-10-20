@@ -1,10 +1,11 @@
 import abc
 import time
-from types import MappingProxyType
 
 from typing import Any, Dict, Mapping, Optional, List
 
-from singer_sdk.plugin_base import PluginBase
+from singer_sdk.sinks import Sink
+
+ColumnType = str
 
 
 def convert_jsonschema_types_to_lists(jsonschema: dict) -> dict:
@@ -30,39 +31,33 @@ def convert_jsonschema_types_to_lists(jsonschema: dict) -> dict:
     return new_schema
 
 
-ColumnType = str
-
-
 class SchemaMigrator(metaclass=abc.ABCMeta):
     def __init__(
         self,
-        target: PluginBase,
-        stream_name: str,
-        schema: Dict,
-        key_properties: Optional[List[str]],
+        sink: Sink,
     ) -> None:
         """
         Initialize the schema migrator.
 
         Args:
-            target: Target instance.
-            stream_name: Name of the stream to sink.
-            schema: Schema of the stream to sink.
-            key_properties: Primary key of the stream to sink.
+            sink: Sink instance.
         """
-        self.target = target
-        self.logger = target.logger
-        self._config = dict(target.config)
-        self.stream_name = stream_name
-        self.key_properties = key_properties
+        self.sink = sink
+        self.logger = sink.logger
+        self.stream_name = sink.stream_name
+        self.key_properties = sink.key_properties
         # Normalize types to always be arrays for ease of type checking
-        # TODO: maybe there's a better way to do this?
-        self.schema = convert_jsonschema_types_to_lists(schema)
+        # TODO: maybe there's a better way to do this? e.g. class
+        self.schema = convert_jsonschema_types_to_lists(sink.schema)
         self._table_name = None
         self._column_definitions = None
 
-    def sync_table(self) -> Dict[str, ColumnType]:
-        """Create or update the table schema for the given stream."""
+    def sync_table_schema(self) -> Dict[str, ColumnType]:
+        """
+        Create or update the table schema for the given stream.
+
+        This is the main entrypoint method for this class.
+        """
         existing_schema = self.get_table(self.table_name)
         if not existing_schema:
             self.logger.info(
@@ -92,12 +87,7 @@ class SchemaMigrator(metaclass=abc.ABCMeta):
 
     @property
     def config(self) -> Mapping[str, Any]:
-        """Get plugin configuration.
-
-        Returns:
-            A frozen (read-only) config dictionary map.
-        """
-        return MappingProxyType(self._config)
+        return self.sink.config
 
     @property
     def column_definitions(self) -> Dict[str, ColumnType]:
