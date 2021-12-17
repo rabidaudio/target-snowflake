@@ -4,14 +4,12 @@ from logging import Logger
 from typing import Any, Dict, Optional, Union, List
 import snowflake.connector
 
-from singer_sdk.target_base import Target
+from singer_sdk import SQLTarget
 from singer_sdk import typing as th
 
 from target_snowflake.sinks import (
     SnowflakeSink,
 )
-
-from target_snowflake.stages import NamedStage
 
 
 class Connection:
@@ -52,12 +50,11 @@ class Connection:
         self.connection.close()
 
 
-class SnowflakeTarget(Target):
+class SnowflakeTarget(SQLTarget):
     """Singer Target for Snowflake database."""
 
     name = "target-snowflake"
     default_sink_class = SnowflakeSink
-    stage_class = NamedStage
 
     config_jsonschema = th.PropertiesList(
         th.Property(
@@ -87,25 +84,3 @@ class SnowflakeTarget(Target):
         th.Property("batch_size_rows", th.IntegerType, default=100000),
         th.Property("raise_on_column_conflicts", th.BooleanType, default=False),
     ).to_dict()
-
-    def __init__(
-        self,
-        config: Optional[Dict[str, Any]] = None,
-        parse_env_config: bool = False,
-    ) -> None:
-        super().__init__(config=config, parse_env_config=parse_env_config)
-        self.table_schema = self.config["snowflake"]["schema"].upper()
-        self.stage = self.stage_class(self)
-
-        # TODO: perhaps Target should have a setup callback hook?
-        self._prepare_load()
-
-    def _prepare_load(self) -> None:
-        connection = self.connect()
-        connection.execute('CREATE SCHEMA IF NOT EXISTS "{}"'.format(self.table_schema))
-
-        connection.close()
-
-    def connect(self) -> Connection:
-        """Create a new database connection."""
-        return Connection(self.logger, **self.config["snowflake"])
