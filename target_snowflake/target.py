@@ -1,16 +1,13 @@
 """Snowflake target class."""
 
 from logging import Logger
-from typing import Any, Dict, Optional, Union, List
+from typing import Any, Dict, List, Optional, Union
+
 import snowflake.connector
-
-from singer_sdk.target_base import Target
 from singer_sdk import typing as th
+from singer_sdk.target_base import Target
 
-from target_snowflake.sinks import (
-    SnowflakeSink,
-)
-
+from target_snowflake.sinks import SnowflakeSink
 from target_snowflake.stages import NamedStage
 
 

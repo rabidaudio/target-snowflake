@@ -1,7 +1,6 @@
 import abc
 import time
-
-from typing import Any, Dict, Mapping, Optional, List
+from typing import Any, Dict, List, Mapping, Optional
 
 from singer_sdk.sinks import Sink
 

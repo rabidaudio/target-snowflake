@@ -1,8 +1,8 @@
 """Database table creator and migrator."""
 
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 
-from target_snowflake.database_target.schema_migrator import SchemaMigrator, ColumnType
+from target_snowflake.database_target.schema_migrator import ColumnType, SchemaMigrator
 
 
 class SnowflakeSchemaMigrator(SchemaMigrator):

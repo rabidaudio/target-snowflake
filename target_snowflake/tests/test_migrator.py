@@ -1,6 +1,6 @@
 from freezegun import freeze_time
-from target_snowflake.sinks import SnowflakeSink
 
+from target_snowflake.sinks import SnowflakeSink
 from target_snowflake.target import Connection, SnowflakeTarget
 
 

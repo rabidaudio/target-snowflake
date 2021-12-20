@@ -1,8 +1,9 @@
 import logging
 import os
+
 import pytest
 
-from target_snowflake.target import SnowflakeTarget, Connection
+from target_snowflake.target import Connection, SnowflakeTarget
 
 
 @pytest.fixture
@@ -12,7 +13,7 @@ def db_config() -> dict:
             "account": os.environ["TEST_DATABASE_ACCOUNT"],
             "user": os.getenv("TEST_DATABASE_USER"),
             "password": os.getenv("TEST_DATABASE_PASSWORD"),
-            "database": os.getenv("TEST_DATABASE_DBNAME", "test-target-snowflake"),
+            "database": os.getenv("TEST_DATABASE_DBNAME", "TARGET_SNOWFLAKE_TEST"),
             "role": os.getenv("TEST_DATABASE_ROLE"),
             "warehouse": os.getenv("TEST_DATABASE_WAREHOUSE"),
         }

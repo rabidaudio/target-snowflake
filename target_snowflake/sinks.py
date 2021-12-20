@@ -3,6 +3,7 @@
 from typing import Dict, List, Optional
 
 from singer_sdk.target_base import Target
+
 from target_snowflake.database_target.csv_sink import CSVSink
 from target_snowflake.migrator import SnowflakeSchemaMigrator
 
